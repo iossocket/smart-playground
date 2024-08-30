@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
+// to protect replay attack
 contract MultiSigWallet {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;

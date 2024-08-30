@@ -17,7 +17,8 @@ contract SignatureNFT is ERC721 {
         i_signer = signer;
     }
 
-    // mint NFT
+    // the signature is used to verify the account can mint(or in whitelist)
+    // it can be fetched from some backend service, to implement whitelist feature
     function mintNft(
         address account,
         uint256 tokenId,
@@ -52,7 +53,6 @@ contract SignatureNFT is ERC721 {
         uint256 tokenId,
         bytes memory signature
     ) public pure returns (address) {
-        // 后招
         bytes32 msgHash = keccak256(abi.encodePacked(account, tokenId));
         bytes32 msgEthHash = MessageHashUtils.toEthSignedMessageHash(msgHash);
         address signer = msgEthHash.recover(signature);

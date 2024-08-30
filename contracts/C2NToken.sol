@@ -2,6 +2,13 @@
 pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
+
+// decimals属性定义了代币的最小分割单位，例如，decimals为18时，1个代币等于10^18个最小单位。
+// 默认情况下，大多数ERC20代币使用18位小数，这意味着在智能合约内部，代币数量是以wei级别的整数来存储的，类似于以太坊中的 1ETH = 10^18 wei。
+
+// 在ERC20合约内部，代币数量始终以最小单位存储，这意味着存储的数字实际上比用户看到的数字大 10^decimals 倍
+// 它的暴露的 external 和 public 方法中需要传入的 amount 都是以最小单位传入的
 
 contract C2NToken is IERC20 {
     mapping(address => uint256) private _balances;
@@ -51,6 +58,7 @@ contract C2NToken is IERC20 {
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
+        console.log("transferFrom %d to %d", msg.sender, sender);
         require(_allowances[sender][msg.sender] >= amount, "not enough");
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender] - amount);

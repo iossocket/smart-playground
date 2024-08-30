@@ -1,0 +1,147 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x02BC79a8e4c2d7A7623112aDa0bf6fEC87EaDC39",
+      "txHash": "0x3d06b7a25aa0796b41ef5f37e46ad16b9d3f386d5f5e74da1b135d8bea74a3dc",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5e7EE5d5a27d3c8777504107547A6d32945c4F27",
+      "txHash": "0x24f29b85c7ce5c1662cd31332dced57bb48a2d7ee58c176b3d92a8b7ab78cd0c",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x420Ee3351F31a2D78b4B9D5044701a4eCbB7c098",
+      "txHash": "0x19ff4869c168559b85396e5ded0148bc3af32c77b1f3a4ae21858b39a9b6fc95",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x60143C564B94cF86aB1020C7ba6d4a46EB7Ea3C9",
+      "txHash": "0x7447b5159b74e7240da204c55b08464075d4c2c9c589fa46e3594bc224dd413c",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x80CaE72103385db09927814092F7B00a19B7Bf01",
+      "txHash": "0xf1c34ae827bef623edd22a4fa7c35b6d3777e624f9104352ba87c22ebdcd7abc",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x1218Cb33763401304790577AFDF12272F322B5eD",
+      "txHash": "0x3bc0fc50dfb45cb9512a29a7ce6e0a41c901390cf9a449f81c15daeebed3df83",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "743ea0733ca3b7075c182e386707be9e5f4ff62475d24dc8385e7dccb246ce1d": {
+      "address": "0x4d7dF99c335BA5512D2F655d68052261ce761107",
+      "txHash": "0xe384be79dc662f77170a773ada402cd7471e7cf87b87d2db158ace2f6acb3f06",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "admin",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "PriceFeedTracker",
+            "src": "contracts/PriceFeedTrackerV1.sol:8"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "4126927c026f6024522af7b00bb640a024a8971d1be9800c4f84b026f1bf52ce": {
+      "address": "0xEacd467FC25a6acDe2830CEE65a07b88630fe1eb",
+      "txHash": "0xf822835055d6950f6891bad6df9cdda89c4dd9239231ad1c3396419b1e0c136c",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "admin",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "PriceFeedTrackerV2",
+            "src": "contracts/PriceFeedTrackerV2.sol:8"
+          },
+          {
+            "label": "price",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_int256",
+            "contract": "PriceFeedTrackerV2",
+            "src": "contracts/PriceFeedTrackerV2.sol:9"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_int256": {
+            "label": "int256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}

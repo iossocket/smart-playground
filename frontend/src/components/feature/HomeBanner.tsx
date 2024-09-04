@@ -1,10 +1,10 @@
 "use client";
 
 import { useWalletStore } from "@/zustand/store";
-import { Button } from "../Button";
+import { Button } from "../ui/button";
 import { Contract } from "ethers";
-import AirdropAbi from '@/abi/Airdrop.json'
-import { AIRDROP_CONTRACT, TOKENS_INFO } from "@/config/valid_chains";
+import Airdrop from "@/artifacts/contracts/Airdrop.sol/Airdrop.json";
+import { TOKENS_INFO } from "@/config/valid_chains";
 import { useMemo, useState } from "react";
 import { ReloadIcon } from "@radix-ui/react-icons";
 
@@ -19,8 +19,11 @@ export default function HomeBanner() {
     }
     try {
       setLoading(true);
-      const airdropContract = new Contract(AIRDROP_CONTRACT, AirdropAbi.abi, signer);
-      const res = await airdropContract.withdrawTokens()
+      console.log("start");
+      const airdropContract = new Contract("0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9", Airdrop.abi, signer);
+      const claimed = await airdropContract.wasClaimed(signer.address);
+      console.log("claimed", claimed);
+      const res = await airdropContract.withdrawTokens();
       console.log("RES", res);
     } catch (error) {
       console.log("error", error)

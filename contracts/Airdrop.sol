@@ -2,7 +2,8 @@
 pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+// import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract Airdrop {
     IERC20 public airdropToken;
@@ -20,7 +21,7 @@ contract Airdrop {
     }
 
     // Function to withdraw tokens.
-    function withdrawTokens() public {
+    function withdrawTokens() external {
         // tx.origin is the address of the EOA (externally ownder account) that originated the transaction,
         //and msg.sender is the address of whatever called the currently executing smart contract (could be an EOA or a smart contract).
         require(

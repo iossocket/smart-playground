@@ -1,4 +1,4 @@
-import { Button } from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import HomeBanner from "@/components/feature/HomeBanner";
 import Image from 'next/image'
 import banner from "@/components/assets/banner.png";

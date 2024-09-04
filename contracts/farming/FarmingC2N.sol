@@ -61,10 +61,11 @@ contract FarmingC2N is Ownable {
 
     // fund total rewards, meanwhile extend the reward period
     function fund(uint256 _amount) public {
-        require(
-            block.timestamp < endTimestamp,
-            "fund: too late, the farm is closed"
-        );
+        // for test purpose
+        // require(
+        //     block.timestamp < endTimestamp,
+        //     "fund: too late, the farm is closed"
+        // );
         erc20.safeTransferFrom(msg.sender, address(this), _amount);
         endTimestamp += _amount / rewardPerSecond;
         totalRewards += _amount;

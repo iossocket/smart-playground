@@ -2,7 +2,7 @@
 
 import { useWalletStore } from "@/zustand/store";
 import { DashboardIcon, ReloadIcon } from "@radix-ui/react-icons";
-import { Button } from "../Button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../DropdownMenu";
+} from "../ui/dropdown-menu";
 import { useEffect } from "react";
 
 export default function WalletButton() {
@@ -35,7 +35,6 @@ export default function WalletButton() {
         <DropdownMenuSeparator />
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
-          console.log("Hi");
           clear();
           useWalletStore.persist.clearStorage();
         }}>Logout</DropdownMenuItem>

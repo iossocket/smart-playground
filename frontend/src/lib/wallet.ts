@@ -4,5 +4,5 @@ export function checkMetaMask(): boolean {
 }
 
 export function numToHexString(num: number): string {
-  return `0x${num.toString(16)}`;
+  return `0x${num.toString(16)}`.toUpperCase();
 }

@@ -49,3 +49,7 @@ const config: HardhatUserConfig = {
   }
 };
 ```
+
+### Farming process
+
+1. deploy FarmingC2N, do fund and add one pool

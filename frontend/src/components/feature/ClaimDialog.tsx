@@ -1,10 +1,18 @@
+"use client";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { ethers } from "ethers";
+import { Contract, ethers } from "ethers";
+import { useWalletStore } from "@/zustand/store";
+import { useState } from "react";
+import { addresses, depositTokens, farmContract } from "@/config/farms";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 
 interface Props {
   open: boolean;
@@ -17,11 +25,77 @@ interface Props {
   userPendingRewards?: string;
   userRewardsSymbol: string;
   poolTitle: string;
+  poolId: number;
 }
+
+const bigintSchema = z.string().refine((val) => {
+  try {
+    BigInt(val);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}, {
+  message: "must be valid number",
+});
 
 export const ClaimDialog = (props: Props) => {
 
+  const { network, account, signer } = useWalletStore();
+  const [loading, setLoading] = useState<boolean>(false);
 
+  const stakeFormSchema = z.object({
+    userBalance: bigintSchema.refine((val) => {
+      if (!props.userBalance) {
+        return true;
+      }
+      return ethers.parseEther(props.userBalance) >= ethers.parseUnits(BigInt(val), 18);
+    }, {
+      message: "must be valid number",
+    }),
+  });
+
+  const withdrawFormSchema = z.object({
+    withdraw: bigintSchema,
+  });
+
+  const stakeFrom = useForm<z.infer<typeof stakeFormSchema>>({
+    resolver: zodResolver(stakeFormSchema),
+    defaultValues: {
+      userBalance: ""
+    }
+  });
+
+  const withdrawFrom = useForm<z.infer<typeof withdrawFormSchema>>({
+    resolver: zodResolver(withdrawFormSchema),
+    defaultValues: {
+      withdraw: ""
+    }
+  });
+
+  const handleDeposit = async (amount: number) => {
+    if (!signer) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
+      await contract.deposit(props.poolId, amount);
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const onStakeSubmit = async (values: z.infer<typeof stakeFormSchema>) => {
+    const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
+    await contract.deposit(props.poolId, ethers.parseUnits(values.userBalance, 18));
+  }
+
+  const onWithdrawSubmit = (values: z.infer<typeof withdrawFormSchema>) => {
+    console.log(values)
+  }
 
   return <Dialog open={props.open} onOpenChange={(open) => {
     console.log("dialog", open);
@@ -39,12 +113,30 @@ export const ClaimDialog = (props: Props) => {
           <TabsTrigger className="flex-1" value="withdraw">Withdraw</TabsTrigger>
         </TabsList>
         <TabsContent value="stake">
-          <div className="flex flex-row justify-between items-center mb-2">
-            <Label htmlFor="userBalance">{props.userBalance ? `Balance: ${ethers.formatEther(props.userBalance)} ${props.userBalanceSymbol}` : `Balance: - ${props.userBalanceSymbol}`}</Label>
-            <Button variant="ghost">MAX</Button>
-          </div>
-          <Input type="number" id="userBalance" placeholder="user balance" className="mb-4" />
-          <Button type="submit" size="lg" className="w-full">Stake</Button>
+          <Form {...stakeFrom}>
+            <form onSubmit={stakeFrom.handleSubmit(onStakeSubmit)}>
+              <FormField
+                control={stakeFrom.control}
+                name="userBalance"
+                render={({ field }) => {
+                  return <FormItem>
+                    <div className="flex flex-row justify-between items-center mb-2">
+                      <FormLabel>{props.userBalance ? `Balance: ${ethers.formatEther(props.userBalance)} ${props.userBalanceSymbol}` : `Balance: - ${props.userBalanceSymbol}`}</FormLabel>
+                      <Button onClick={() => {
+                        // TODO
+                        stakeFrom.setValue("userBalance", "123");
+                      }} variant="ghost">MAX</Button>
+                    </div>
+                    <FormControl>
+                      <Input placeholder="user balance" className="mb-4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                }}
+              />
+              <Button type="submit" size="lg" className="w-full mt-4">Stake</Button>
+            </form>
+          </Form>
         </TabsContent>
         <TabsContent value="claim">
           <div className="flex flex-row justify-center items-center mb-10 mt-9">
@@ -53,14 +145,30 @@ export const ClaimDialog = (props: Props) => {
           <Button type="submit" size="lg" className="w-full">Claim</Button>
         </TabsContent>
         <TabsContent value="withdraw">
-          <div className="flex flex-row justify-between items-center mb-2">
-            <Label htmlFor="userStaked">{props.userStaked ? `Balance: ${ethers.formatEther(props.userStaked)} ${props.userBalanceSymbol}` : `Balance: - ${props.userBalanceSymbol}`}</Label>
-            <Button variant="ghost">MAX</Button>
-          </div>
-          <Input type="number" id="userStaked" placeholder="withdraw" className="mb-4" />
-          <Button type="submit" size="lg" className="w-full">Withdraw</Button>
+          <Form {...withdrawFrom}>
+            <form onSubmit={withdrawFrom.handleSubmit(onWithdrawSubmit)}>
+              <FormField
+                control={withdrawFrom.control}
+                name="withdraw"
+                render={({ field }) => {
+                  return <FormItem>
+                    <div className="flex flex-row justify-between items-center mb-2">
+                      <Label>{props.userStaked ? `Deposited: ${ethers.formatEther(props.userStaked)} ${props.userBalanceSymbol}` : `Deposited: - ${props.userBalanceSymbol}`}</Label>
+                      <Button onClick={() => {
+                      }} variant="ghost">MAX</Button>
+                    </div>
+                    <FormControl>
+                      <Input placeholder="user balance" className="mb-4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                }}
+              />
+              <Button type="submit" size="lg" className="w-full mt-4">Withdraw</Button>
+            </form>
+          </Form>
         </TabsContent>
       </Tabs>
     </DialogContent>
-  </Dialog>
+  </Dialog >
 }

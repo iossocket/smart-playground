@@ -196,6 +196,7 @@ export default function FarmingForm(props: Props) {
     ]} />}
     {showClaimDialog && <ClaimDialog
       poolTitle={props.title}
+      poolId={props.poolId}
       open={showClaimDialog}
       setOpen={(open) => setShowClaimDialog(open)}
       initSelectedTab={initSelectedTab}

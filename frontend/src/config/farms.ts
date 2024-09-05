@@ -1,5 +1,6 @@
 import LPToken from "@/artifacts/contracts/C2NToken.sol/C2NToken.json";
 import Airdrop from "@/artifacts/contracts/Airdrop.sol/Airdrop.json";
+import FarmingC2N from "@/artifacts/contracts/farming/FarmingC2N.sol/FarmingC2N.json";
 
 export const addresses = {
   "FarmingC2NModule#C2NToken": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
@@ -14,6 +15,8 @@ export const depositTokens: Record<string, any> = {
   [addresses["FarmingC2NModule#lpToken02"]]: LPToken,
   [addresses["FarmingC2NModule#Airdrop"]]: Airdrop
 };
+
+export const farmContract = FarmingC2N;
 
 export const farms: Record<number, any> = {
   31337: {

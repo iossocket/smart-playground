@@ -33,16 +33,6 @@ const c2n = await C2N.attach("0x5FbDB2315678afecb367f032d93F642f64180aa3");
 const FarmingC2N = await ethers.getContractFactory("FarmingC2N");
 const farmingC2N = await FarmingC2N.attach("0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9");
 
-# total rewards: 10000000000000000000n
-# 10 per sec
-# 1725206400 + 10000000000000000000 / 10
-# 1000000000000000000
-# 1000000001725206400
-```
-
-AirdropModule#C2NToken - 0x5FbDB2315678afecb367f032d93F642f64180aa3
-AirdropModule#Airdrop - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-
 ## 
 
 SalesFactory -> C2NSale -> AllocationStating

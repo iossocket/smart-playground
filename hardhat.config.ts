@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      //   allowBlocksWithSameTimestamp: true,
+      // allowBlocksWithSameTimestamp: true,
       // blockGasLimit: 12000000,
     },
     sepolia: {

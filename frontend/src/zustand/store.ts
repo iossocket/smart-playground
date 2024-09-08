@@ -70,7 +70,7 @@ export const useWalletStore = create<WalletState & WalletAction>()(persist((set,
     const connect = async () => {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("wallet_addEthereumChain", [CURRENT_CHAIN]);
+        // await provider.send("wallet_addEthereumChain", [CURRENT_CHAIN]);
         await provider.send("wallet_switchEthereumChain", [{ chainId: CURRENT_CHAIN.chainId }])
         return await connectTo(BigInt(Number(CURRENT_CHAIN.chainId)));
       } catch (error) {

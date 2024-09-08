@@ -58,7 +58,7 @@ contract C2NToken is IERC20 {
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
-        console.log("transferFrom %d to %d", msg.sender, sender);
+        // console.log("transferFrom %d to %d", msg.sender, sender);
         require(_allowances[sender][msg.sender] >= amount, "not enough");
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender] - amount);

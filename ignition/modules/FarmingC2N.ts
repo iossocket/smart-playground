@@ -14,9 +14,10 @@ so it can resume a failure deployment. and can depend on other module in ./ignit
 if need to deploy the same contract multiple times for some reasons, has to add the last params with an unique id.
 if need to call the same function in the same contract multiple times, has to add the last params with an unique id.
 */
-
+// await provider.send("wallet_addEthereumChain", [CURRENT_CHAIN]);
 const FarmingC2NModule = buildModule("FarmingC2NModule", (m) => {
   const initToken = m.getParameter("c2nInitToken", INIT_TOKEN);
+
   const c2nToken = m.contract("C2NToken", ["C2N", "C2N", initToken, 18])
   const farmingC2N = m.contract("FarmingC2N", [c2nToken, 10, SEPT_2ND_2024]);
 

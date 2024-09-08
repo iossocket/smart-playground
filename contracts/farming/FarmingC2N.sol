@@ -19,7 +19,7 @@ contract FarmingC2N is Ownable {
         IERC20 lpToken;
         uint256 allocPoint;
         uint256 totalDeposits;
-        uint256 accumulated;
+        uint256 accumulatedPerTokenRewards;
         uint256 lastUpdated;
     }
 
@@ -88,7 +88,7 @@ contract FarmingC2N is Ownable {
                 lpToken: _lpToken,
                 allocPoint: _allocPoint,
                 totalDeposits: 0,
-                accumulated: 0,
+                accumulatedPerTokenRewards: 0,
                 lastUpdated: lastUpdated
             })
         );
@@ -116,22 +116,34 @@ contract FarmingC2N is Ownable {
 
     function _calculatePoolRewardsPerToken(
         PoolInfo memory pool
-    ) internal view returns (uint256 accumulated, uint256 lastUpdated) {
-        accumulated = pool.accumulated;
+    )
+        internal
+        view
+        returns (uint256 accumulatedPerTokenRewards, uint256 lastUpdated)
+    {
+        accumulatedPerTokenRewards = pool.accumulatedPerTokenRewards;
         lastUpdated = pool.lastUpdated;
         if (block.timestamp < startTimestamp) {
-            return (accumulated, lastUpdated);
+            return (accumulatedPerTokenRewards, lastUpdated);
         }
 
         uint256 lastUpdatedTimestamp = block.timestamp > endTimestamp
             ? endTimestamp
             : block.timestamp;
         if (lastUpdatedTimestamp == pool.lastUpdated) {
-            return (accumulated, lastUpdated);
+            console.log(
+                "lastUpdatedTimestamp == pool.lastUpdated, accumulatedPerTokenRewards: %d",
+                accumulatedPerTokenRewards
+            );
+            return (accumulatedPerTokenRewards, lastUpdated);
         }
         lastUpdated = lastUpdatedTimestamp;
         if (pool.totalDeposits == 0) {
-            return (accumulated, lastUpdated);
+            console.log(
+                "pool.totalDeposits is 0, accumulatedPerTokenRewards: %d",
+                accumulatedPerTokenRewards
+            );
+            return (accumulatedPerTokenRewards, lastUpdated);
         }
         uint256 elapsed = lastUpdatedTimestamp - pool.lastUpdated;
         console.log(
@@ -140,9 +152,9 @@ contract FarmingC2N is Ownable {
             rewardPerSecond
         );
 
-        // pool.accumulated + (elapsed * rewardPerSecond) * (pool.allocPoint / totalAllocPoint) / pool.totalDeposits;
+        // pool.accumulatedPerTokenRewards + (elapsed * rewardPerSecond) * (pool.allocPoint / totalAllocPoint) / pool.totalDeposits;
         // every div operation need to nul 1e18
-        uint newAccumulated = pool.accumulated +
+        uint newAccumulated = pool.accumulatedPerTokenRewards +
             (elapsed * rewardPerSecond * pool.allocPoint * 1e36) /
             (totalAllocPoint * pool.totalDeposits);
         return (newAccumulated, lastUpdated);
@@ -154,10 +166,12 @@ contract FarmingC2N is Ownable {
     ) public view returns (uint256) {
         PoolInfo memory pool = poolInfo[_pid];
         UserInfo memory user = userInfo[_pid][_user];
-        (uint256 accumulated, ) = _calculatePoolRewardsPerToken(pool);
+        (uint256 accumulatedPerTokenRewards, ) = _calculatePoolRewardsPerToken(
+            pool
+        );
         return
             user.accumulated +
-            ((accumulated - user.checkpoint) * user.userStake) /
+            ((accumulatedPerTokenRewards - user.checkpoint) * user.userStake) /
             1e36;
     }
 
@@ -181,11 +195,11 @@ contract FarmingC2N is Ownable {
 
     function updatePool(PoolInfo storage pool) internal {
         (
-            uint256 accumulated,
+            uint256 accumulatedPerTokenRewards,
             uint256 lastUpdated
         ) = _calculatePoolRewardsPerToken(pool);
 
-        pool.accumulated = accumulated;
+        pool.accumulatedPerTokenRewards = accumulatedPerTokenRewards;
         pool.lastUpdated = lastUpdated;
     }
 
@@ -197,9 +211,10 @@ contract FarmingC2N is Ownable {
         uint256 depositAmount = _amount;
         updatePool(pool);
         user.accumulated +=
-            ((pool.accumulated - user.checkpoint) * user.userStake) /
+            ((pool.accumulatedPerTokenRewards - user.checkpoint) *
+                user.userStake) /
             1e36;
-        user.checkpoint = pool.accumulated;
+        user.checkpoint = pool.accumulatedPerTokenRewards;
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
@@ -222,9 +237,10 @@ contract FarmingC2N is Ownable {
 
         updatePool(pool);
         user.accumulated +=
-            ((pool.accumulated - user.checkpoint) * user.userStake) /
+            ((pool.accumulatedPerTokenRewards - user.checkpoint) *
+                user.userStake) /
             1e36;
-        user.checkpoint = pool.accumulated;
+        user.checkpoint = pool.accumulatedPerTokenRewards;
 
         user.userStake -= _amount;
         pool.totalDeposits -= _amount;
@@ -241,9 +257,10 @@ contract FarmingC2N is Ownable {
         console.log("user.checkpoint: %d", user.checkpoint);
 
         user.accumulated +=
-            ((pool.accumulated - user.checkpoint) * user.userStake) /
+            ((pool.accumulatedPerTokenRewards - user.checkpoint) *
+                user.userStake) /
             1e36;
-        user.checkpoint = pool.accumulated;
+        user.checkpoint = pool.accumulatedPerTokenRewards;
 
         uint256 rewards = user.accumulated;
         user.accumulated = 0;

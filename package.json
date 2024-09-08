@@ -6,7 +6,8 @@
     "hardhat": "^2.22.5"
   },
   "scripts": {
-    "test": "npx hardhat test --grep FarmingC2N"
+    "test": "npx hardhat test --grep FarmingC2N",
+    "local": "npx hardhat ignition deploy ./ignition/modules/FarmingC2N.ts --network localhost --deployment-id second-deployment --parameters ignition/parameters/parameters.json && node copy-deployment-address-json.js"
   },
   "dependencies": {
     "@chainlink/contracts": "^1.2.0",

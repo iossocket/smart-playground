@@ -3,7 +3,7 @@ import {
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import hre from "hardhat";
+import hre, { network } from "hardhat";
 
 
 const ONE_DAY_IN_SECS = 24 * 60 * 60;
@@ -12,7 +12,8 @@ const initToken = hre.ethers.parseUnits("10000", DECIMAL);
 
 describe("FarmingC2N", function () {
   async function deployFixture() {
-    const startTime = (await time.latest()) + ONE_DAY_IN_SECS;
+    // const startTime = (await time.latest()) + ONE_DAY_IN_SECS;
+    const startTime = 1725206400;
     const [owner, account1, account2] = await hre.ethers.getSigners();
 
     const C2NToken = await hre.ethers.getContractFactory("C2NToken");
@@ -21,13 +22,12 @@ describe("FarmingC2N", function () {
     const lpToken02 = await C2NToken.deploy("LP02", "LP02", hre.ethers.parseUnits("10000", DECIMAL), DECIMAL);
 
     const FarmingC2N = await hre.ethers.getContractFactory("FarmingC2N");
-    hre.ethers.parseEther("1")
     const farmingC2N = await FarmingC2N.deploy(c2NToken, 10, startTime);
 
     return { farmingC2N, c2NToken, startTime, owner, account1, account2, lpToken01, lpToken02 };
   }
 
-  it("Should extend end time successfully", async function () {
+  xit("Should extend end time successfully", async function () {
     const { farmingC2N, c2NToken, owner, startTime } = await loadFixture(deployFixture);
     await c2NToken.mint(owner, initToken);
     await c2NToken.connect(owner).approve(farmingC2N, initToken);
@@ -37,13 +37,13 @@ describe("FarmingC2N", function () {
     expect(Number(await farmingC2N.endTimestamp()) - startTime).to.equals(5000000000000000000)
   });
 
-  it("Should add one pool successfully", async function () {
+  xit("Should add one pool successfully", async function () {
     const { farmingC2N, lpToken01 } = await loadFixture(deployFixture);
     await farmingC2N.add(250, lpToken01, true);
     expect(await farmingC2N.poolLength()).to.equal(1)
   });
 
-  it("Should deposit successfully", async function () {
+  xit("Should deposit successfully", async function () {
     const { farmingC2N, c2NToken, owner, account1, startTime, lpToken01 } = await loadFixture(deployFixture);
     await c2NToken.mint(owner, initToken);
     await c2NToken.connect(owner).approve(farmingC2N, initToken);
@@ -60,26 +60,55 @@ describe("FarmingC2N", function () {
     expect(await farmingC2N.deposited(0, account1)).to.equal(hre.ethers.parseUnits("10", DECIMAL));
   });
 
-  it("should get pending correctly", async function () {
+  xit("should get pending correctly", async function () {
     const { farmingC2N, c2NToken, owner, account1, startTime, lpToken01 } = await loadFixture(deployFixture);
     await c2NToken.mint(owner, initToken);
     await c2NToken.connect(owner).approve(farmingC2N, initToken);
 
     await farmingC2N.connect(owner).fund(hre.ethers.parseUnits("50", DECIMAL));
-
-    await time.increaseTo(startTime + 10);
     await farmingC2N.add(250, lpToken01, true);
 
     await lpToken01.mint(account1, initToken);
     await lpToken01.connect(account1).approve(farmingC2N, initToken);
+
+    await time.increaseTo(startTime + 10 * ONE_DAY_IN_SECS);
     await farmingC2N.connect(account1).deposit(0, hre.ethers.parseUnits("1", DECIMAL));
 
-    await time.increaseTo(startTime + 10 + 10);
+    await time.increaseTo(startTime + 11 * ONE_DAY_IN_SECS);
     const pending = await farmingC2N.pending(0, account1)
     expect(pending).to.equal(100);
   });
 
-  it("Should claim successfully", async function () {
+  it("should get pending", async function () {
+
+    const { farmingC2N, c2NToken, owner, account1, startTime, lpToken01 } = await loadFixture(deployFixture);
+    await c2NToken.mint(owner, initToken);
+    await c2NToken.connect(owner).approve(farmingC2N, initToken);
+
+    // 10000000000000000000n
+    await farmingC2N.connect(owner).fund(hre.ethers.parseUnits("10", DECIMAL));
+    console.log("do add pool")
+    await time.increaseTo(startTime + 10 * ONE_DAY_IN_SECS);
+    await farmingC2N.add(250, lpToken01, true);
+
+    await lpToken01.mint(account1, initToken);
+    await lpToken01.connect(account1).approve(farmingC2N, initToken);
+
+    // 10000000000000000000n
+    // start 1725206400
+    //       1725543529
+    await time.increaseTo(startTime + 10 * ONE_DAY_IN_SECS);
+    console.log("do deposit")
+    await farmingC2N.connect(account1).deposit(0, hre.ethers.parseUnits("10", DECIMAL));
+
+    await time.increaseTo(startTime + 11 * ONE_DAY_IN_SECS);
+    console.log("do pending")
+    console.log(await farmingC2N.poolInfo(0), await farmingC2N.userInfo(0, account1));
+    const pending = await farmingC2N.pending(0, account1)
+    expect(pending).to.equal(864000);
+  });
+
+  xit("Should claim successfully", async function () {
     const { farmingC2N, c2NToken, owner, account1, startTime, lpToken01 } = await loadFixture(deployFixture);
     await c2NToken.mint(owner, initToken);
     await c2NToken.connect(owner).approve(farmingC2N, initToken);

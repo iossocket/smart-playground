@@ -41,7 +41,7 @@ const bigintSchema = z.string().refine((val) => {
 
 export const ClaimDialog = (props: Props) => {
 
-  const { network, account, signer } = useWalletStore();
+  const { signer } = useWalletStore();
   const [loading, setLoading] = useState<boolean>(false);
 
   const stakeFormSchema = z.object({
@@ -49,14 +49,21 @@ export const ClaimDialog = (props: Props) => {
       if (!props.userBalance) {
         return true;
       }
-      return ethers.parseEther(props.userBalance) >= ethers.parseUnits(BigInt(val), 18);
+      return ethers.parseEther(props.userBalance) >= ethers.parseUnits(`${BigInt(val)}`, 18);
     }, {
-      message: "must be valid number",
-    }),
+      message: "not enough to stake",
+    })
   });
 
   const withdrawFormSchema = z.object({
-    withdraw: bigintSchema,
+    withdraw: bigintSchema.refine((val) => {
+      if (!props.userStaked) {
+        return true;
+      }
+      return ethers.parseEther(props.userStaked) >= ethers.parseUnits(`${BigInt(val)}`, 18);
+    }, {
+      message: "not enough to withdraw",
+    })
   });
 
   const stakeFrom = useForm<z.infer<typeof stakeFormSchema>>({
@@ -73,24 +80,18 @@ export const ClaimDialog = (props: Props) => {
     }
   });
 
-  const handleDeposit = async (amount: number) => {
-    if (!signer) {
-      return;
-    }
+  const onStakeSubmit = async (values: z.infer<typeof stakeFormSchema>) => {
     try {
-      setLoading(true);
+      const amount = ethers.parseUnits(values.userBalance, 18);
+
+      const lpContract = new Contract(addresses["FarmingC2NModule#lpToken01"], depositTokens[addresses["FarmingC2NModule#lpToken01"]].abi, signer);
+      await lpContract.approve(addresses["FarmingC2NModule#FarmingC2N"], amount);
+
       const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
       await contract.deposit(props.poolId, amount);
-    } catch (error) {
-      console.log("error", error);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error(e);
     }
-  }
-
-  const onStakeSubmit = async (values: z.infer<typeof stakeFormSchema>) => {
-    const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
-    await contract.deposit(props.poolId, ethers.parseUnits(values.userBalance, 18));
   }
 
   const onWithdrawSubmit = (values: z.infer<typeof withdrawFormSchema>) => {

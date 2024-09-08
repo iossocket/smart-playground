@@ -33,7 +33,7 @@ interface Props {
 }
 
 export default function FarmingForm(props: Props) {
-  const { network, account, signer } = useWalletStore();
+  const { network, account, signer, provider } = useWalletStore();
   const { viewStakingContract, viewDepositTokenContract } = useStake({
     stakingAddress: props.stakingAddress,
     depositTokenAddress: props.depositTokenAddress,
@@ -58,11 +58,13 @@ export default function FarmingForm(props: Props) {
   }, [network, props.chainId])
 
   const handleClaim = async () => {
-    if (!signer) {
+    if (!signer || !provider) {
       return;
     }
     try {
       setLoading(true);
+      console.log(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi);
+      // await provider.send("evm_mine", []);
       const airdropContract = new Contract(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi, signer);
       const claimed = await airdropContract.wasClaimed(signer.address);
       console.log("claimed", claimed);
@@ -103,6 +105,7 @@ export default function FarmingForm(props: Props) {
       setUserStaked(`${data}`);
     });
     viewStakingContract.pending(props.poolId, account).then(data => {
+      console.log('%c [ UserPendingRewards ]-106', 'font-size:13px; background:pink; color:#bf2c9f;', data);
       setUserPendingRewards(`${data}`);
     });
     viewDepositTokenContract.balanceOf(account).then(data => {
@@ -113,7 +116,10 @@ export default function FarmingForm(props: Props) {
         setAirdropRemaining(`${data}`);
       });
     }
-  }, [props.poolId, viewStakingContract, account, viewDepositTokenContract, props.airdropAddress]);
+    provider!.getBlock("latest").then((block) => {
+      console.log("更新后的 block.timestamp:", block?.timestamp);
+    });
+  }, [props.poolId, viewStakingContract, account, viewDepositTokenContract, props.airdropAddress, provider]);
 
   return <Card>
     {/* {
@@ -146,11 +152,11 @@ export default function FarmingForm(props: Props) {
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Total staked</TableCell>
-            <TableCell className="text-right">{_.isUndefined(pool.totalDeposits) ? < LoadingSpinner className="ml-auto" /> : `${pool.totalDeposits}`}</TableCell>
+            <TableCell className="text-right">{_.isUndefined(pool.totalDeposits) ? < LoadingSpinner className="ml-auto" /> : `${ethers.formatEther(pool.totalDeposits)}`}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">My staked</TableCell>
-            <TableCell className="text-right">{_.isUndefined(userStaked) ? < LoadingSpinner className="ml-auto" /> : `${userStaked}`}</TableCell>
+            <TableCell className="text-right">{_.isUndefined(userStaked) ? < LoadingSpinner className="ml-auto" /> : `${ethers.formatEther(userStaked)}`}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Available</TableCell>

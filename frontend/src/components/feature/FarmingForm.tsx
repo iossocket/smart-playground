@@ -64,7 +64,6 @@ export default function FarmingForm(props: Props) {
     try {
       setLoading(true);
       console.log(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi);
-      // await provider.send("evm_mine", []);
       const airdropContract = new Contract(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi, signer);
       const claimed = await airdropContract.wasClaimed(signer.address);
       console.log("claimed", claimed);

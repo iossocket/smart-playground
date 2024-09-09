@@ -27,6 +27,7 @@
     ],
   });
   ```
+  > run it in Google homepage
 
 * 1.4 run `npm run local` to deploy c2n related contracts
 
@@ -35,6 +36,8 @@
 * 1.6 run `npm run dev` to start frontend in dev environment
 
 > 1.1, 1.3, 1.5 is useful to deal with unexpected exception.
+
+> In localhost env, block,timestamp wont change if no block mined, so can run `await farmingC2N.createNewBlock()` in hardhat console, which will do nothing except emit an event with timestamp
 
 ### Common Command
 
@@ -76,7 +79,7 @@ const priceFeedTrackerV2 = await PriceFeedTrackerV2.attach('0x1218Cb337634013047
 
 ### Tips
 
-`hardhat.config.ts`添加`allowBlocksWithSameTimestamp`可在测试环境不会因为新区块的产生而更新`block.timestamp`。
+Add `allowBlocksWithSameTimestamp` in `hardhat.config.ts`, then `block.timestamp` won't change when new block mined.
 
 ```typescript
 const config: HardhatUserConfig = {
@@ -89,7 +92,7 @@ const config: HardhatUserConfig = {
 };
 ```
 
-`block.timestamp`的值可完全由如下代码控制
+`block.timestamp` can be fully controlled by the following code
 
 ```typescript
 import {

@@ -43,6 +43,7 @@ contract FarmingC2N is Ownable {
         uint256 indexed pid,
         uint256 amount
     );
+    event NewBlock(uint256 timestamp);
 
     constructor(
         IERC20 _erc20,
@@ -276,5 +277,11 @@ contract FarmingC2N is Ownable {
     function erc20Transfer(address _to, uint256 _amount) internal {
         erc20.transfer(_to, _amount);
         paidOut += _amount;
+    }
+
+    //
+    function createNewBlock() external returns (uint256) {
+        emit NewBlock(block.timestamp);
+        return block.timestamp;
     }
 }

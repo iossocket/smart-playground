@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletStore } from "@/zustand/store";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../ui/button";
 import { Table, TableBody, TableCell, TableRow } from "../ui/table";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
@@ -13,6 +13,7 @@ import { Contract, ethers } from "ethers";
 import { addresses, depositTokens } from "@/config/farms";
 import { AlertDialog } from "./AlertDialog";
 import { ClaimDialog } from "./ClaimDialog";
+import { useToast } from "../hooks/use-toast";
 
 interface Props {
   chainId: number;
@@ -49,6 +50,7 @@ export default function FarmingForm(props: Props) {
   const [alertBody, setAlertBody] = useState<string | null>(null);
   const [showClaimDialog, setShowClaimDialog] = useState<boolean>(false);
   const [initSelectedTab, setInitSelectedTab] = useState<"claim" | "stake" | "withdraw">("claim");
+  const { toast } = useToast()
 
   const isChainAvailable = useMemo(() => {
     if (!network) {
@@ -57,43 +59,7 @@ export default function FarmingForm(props: Props) {
     return Number(network.chainId) === props.chainId;
   }, [network, props.chainId])
 
-  const handleClaim = async () => {
-    if (!signer || !provider) {
-      return;
-    }
-    try {
-      setLoading(true);
-      console.log(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi);
-      const airdropContract = new Contract(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi, signer);
-      const claimed = await airdropContract.wasClaimed(signer.address);
-      console.log("claimed", claimed);
-      if (!claimed) {
-        const withdrawTokensRes = await airdropContract.withdrawTokens();
-        console.log("RES", withdrawTokensRes);
-        await window.ethereum && window.ethereum.request({
-          method: "wallet_watchAsset",
-          params: {
-            type: "ERC20",
-            options: {
-              address: addresses["FarmingC2NModule#lpToken01"],
-              symbol: props.depositSymbol,
-              decimals: 18,
-              image: '',
-            }
-          }
-        });
-      } else {
-        setAlertBody(`Current account ${account} had claimed already.`)
-        setShowAlert(true);
-      }
-    } catch (error) {
-      console.log("error", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
+  const refreshFormData = useCallback(() => {
     if (!viewStakingContract || !account || !viewDepositTokenContract) {
       return;
     }
@@ -118,9 +84,53 @@ export default function FarmingForm(props: Props) {
     provider!.getBlock("latest").then((block) => {
       console.log("更新后的 block.timestamp:", block?.timestamp);
     });
-  }, [props.poolId, viewStakingContract, account, viewDepositTokenContract, props.airdropAddress, provider]);
+  }, [account, props.airdropAddress, props.poolId, provider, viewDepositTokenContract, viewStakingContract]);
 
-  return <Card>
+  const handleClaim = useCallback(async () => {
+    if (!signer || !provider) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const airdropContract = new Contract(addresses["FarmingC2NModule#Airdrop"], depositTokens[addresses["FarmingC2NModule#Airdrop"]].abi, signer);
+      const claimed = await airdropContract.wasClaimed(signer.address);
+      if (!claimed) {
+        await airdropContract.withdrawTokens();
+        await window.ethereum && window.ethereum.request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC20",
+            options: {
+              address: addresses["FarmingC2NModule#lpToken01"],
+              symbol: props.depositSymbol,
+              decimals: 18,
+              image: '',
+            }
+          }
+        });
+        refreshFormData();
+        toast({
+          description: "Claim successfully!"
+        });
+      } else {
+        setAlertBody(`Current account ${account} had claimed already.`)
+        setShowAlert(true);
+      }
+    } catch (error) {
+      console.log("error", error);
+      toast({
+        description: "failed",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [account, props.depositSymbol, provider, refreshFormData, signer, toast]);
+
+  useEffect(() => {
+    refreshFormData();
+  }, [refreshFormData]);
+
+  return <Card className="relative">
     {/* {
       isChainAvailable ?
         <></>
@@ -166,7 +176,7 @@ export default function FarmingForm(props: Props) {
     </CardContent>
 
     <CardFooter className="flex flex-col">
-      <Button size="lg" className="w-full" onClick={() => {
+      <Button disabled={loading} size="lg" className="w-full" onClick={() => {
         setInitSelectedTab("stake");
         setShowClaimDialog(true);
       }}>Stake</Button>
@@ -176,7 +186,7 @@ export default function FarmingForm(props: Props) {
             <TableCell className="font-medium">Rewards</TableCell>
             <TableCell className="text-right">{_.isUndefined(userPendingRewards) ? < LoadingSpinner className="ml-auto" /> : <>
               {`${userPendingRewards} ${props.earnedSymbol}`}
-              <Button size="sm" className="ml-2" onClick={() => {
+              <Button disabled={loading} size="sm" className="ml-2" onClick={() => {
                 setInitSelectedTab("claim");
                 setShowClaimDialog(true);
               }}>CLAIM</Button>
@@ -211,6 +221,8 @@ export default function FarmingForm(props: Props) {
       userPendingRewards={userPendingRewards}
       userRewardsSymbol={props.earnedSymbol}
     />}
-
+    {loading && <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-10">
+      <LoadingSpinner />
+    </div>}
   </Card>
 }

@@ -279,7 +279,7 @@ contract FarmingC2N is Ownable {
         paidOut += _amount;
     }
 
-    //
+    // block.time
     function createNewBlock() external returns (uint256) {
         emit NewBlock(block.timestamp);
         return block.timestamp;

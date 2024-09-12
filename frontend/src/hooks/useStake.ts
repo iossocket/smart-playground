@@ -10,9 +10,10 @@ interface Props {
   stakingAddress: string;
   depositTokenAddress: string;
   airdropAddress: string;
+  c2nTokenAddress: string;
 }
 
-export const useStake = ({ stakingAddress, depositTokenAddress }: Props) => {
+export const useStake = ({ stakingAddress, depositTokenAddress, c2nTokenAddress }: Props) => {
 
   const { network } = useWalletStore();
 
@@ -50,8 +51,26 @@ export const useStake = ({ stakingAddress, depositTokenAddress }: Props) => {
     }
   }, [network, depositTokenAddress]);
 
+  const viewC2NTokenContract: Contract | null = useMemo(() => {
+    if (!network) {
+      return null;
+    }
+    const found = VALID_CHAINS.filter(chain => numToHexString(Number(network.chainId)) === chain.chainId.toUpperCase());
+    if (!found || !found.length) {
+      return null;
+    }
+    if (c2nTokenAddress) {
+      const viewProvider = new ethers.JsonRpcProvider(found[0].rpcUrls[0]);
+      const viewC2NTokenContract = new Contract(c2nTokenAddress, depositTokens[c2nTokenAddress].abi, viewProvider);
+      return viewC2NTokenContract;
+    } else {
+      return null;
+    }
+  }, [network, c2nTokenAddress]);
+
   return {
     viewStakingContract,
     viewDepositTokenContract,
+    viewC2NTokenContract
   }
 };

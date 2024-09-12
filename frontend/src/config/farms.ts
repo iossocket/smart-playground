@@ -2,13 +2,15 @@ import LPToken from "@/artifacts/contracts/C2NToken.sol/C2NToken.json";
 import Airdrop from "@/artifacts/contracts/Airdrop.sol/Airdrop.json";
 import FarmingC2N from "@/artifacts/contracts/farming/FarmingC2N.sol/FarmingC2N.json";
 import artifacts from "@/artifacts/deployed_addresses.json"
+import C2N from "@/artifacts/contracts/C2NToken.sol/C2NToken.json";
 
 export const addresses = artifacts;
 
 export const depositTokens: Record<string, any> = {
   [addresses["FarmingC2NModule#lpToken01"]]: LPToken,
   [addresses["FarmingC2NModule#lpToken02"]]: LPToken,
-  [addresses["FarmingC2NModule#Airdrop"]]: Airdrop
+  [addresses["FarmingC2NModule#Airdrop"]]: Airdrop,
+  [addresses["FarmingC2NModule#C2NToken"]]: C2N,
 };
 
 export const farmContract = FarmingC2N;

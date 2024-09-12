@@ -35,14 +35,16 @@ interface Props {
 
 export default function FarmingForm(props: Props) {
   const { network, account, signer, provider } = useWalletStore();
-  const { viewStakingContract, viewDepositTokenContract } = useStake({
+  const { viewStakingContract, viewDepositTokenContract, viewC2NTokenContract } = useStake({
     stakingAddress: props.stakingAddress,
     depositTokenAddress: props.depositTokenAddress,
-    airdropAddress: props.airdropAddress
+    airdropAddress: props.airdropAddress,
+    c2nTokenAddress: props.earnedTokenAddress,
   });
   const [pool, setPool] = useState<any>({});
   const [userStaked, setUserStaked] = useState<undefined | string>();
   const [userBalance, setUserBalance] = useState<undefined | string>();
+  const [userC2NBalance, setUserC2NBalance] = useState<undefined | string>();
   const [userPendingRewards, setUserPendingRewards] = useState<undefined | string>();
   const [airdropRemaining, setAirdropRemaining] = useState<undefined | string>();
   const [loading, setLoading] = useState<boolean>(false);
@@ -60,7 +62,7 @@ export default function FarmingForm(props: Props) {
   }, [network, props.chainId])
 
   const refreshFormData = useCallback(() => {
-    if (!viewStakingContract || !account || !viewDepositTokenContract) {
+    if (!viewStakingContract || !account || !viewDepositTokenContract || !viewC2NTokenContract) {
       return;
     }
     viewStakingContract.poolInfo(props.poolId).then(data => {
@@ -76,6 +78,9 @@ export default function FarmingForm(props: Props) {
     viewDepositTokenContract.balanceOf(account).then(data => {
       setUserBalance(`${data}`);
     });
+    viewC2NTokenContract.balanceOf(account).then(data => {
+      setUserC2NBalance(`${data}`);
+    });
     if (props.airdropAddress) {
       viewDepositTokenContract.balanceOf(props.airdropAddress).then(data => {
         setAirdropRemaining(`${data}`);
@@ -84,7 +89,7 @@ export default function FarmingForm(props: Props) {
     provider!.getBlock("latest").then((block) => {
       console.log("更新后的 block.timestamp:", block?.timestamp);
     });
-  }, [account, props.airdropAddress, props.poolId, provider, viewDepositTokenContract, viewStakingContract]);
+  }, [account, props.airdropAddress, props.poolId, provider, viewDepositTokenContract, viewStakingContract, viewC2NTokenContract]);
 
   const handleClaim = useCallback(async () => {
     if (!signer || !provider) {
@@ -157,7 +162,7 @@ export default function FarmingForm(props: Props) {
         <TableBody>
           <TableRow>
             <TableCell className="font-medium">Earned</TableCell>
-            <TableCell className="text-right">{props.earnedSymbol}</TableCell>
+            <TableCell className="text-right">{`${ethers.formatEther(userC2NBalance || 0)} ${props.earnedSymbol}`}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="font-medium">Total staked</TableCell>
@@ -183,7 +188,7 @@ export default function FarmingForm(props: Props) {
       <Table className="mt-2">
         <TableBody>
           <TableRow>
-            <TableCell className="font-medium">Rewards</TableCell>
+            <TableCell className="font-medium">Pending Rewards</TableCell>
             <TableCell className="text-right">{_.isUndefined(userPendingRewards) ? < LoadingSpinner className="ml-auto" /> : <>
               {`${userPendingRewards} ${props.earnedSymbol}`}
               <Button disabled={loading} size="sm" className="ml-2" onClick={() => {

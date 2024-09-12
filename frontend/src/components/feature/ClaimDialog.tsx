@@ -114,6 +114,34 @@ export const ClaimDialog = (props: Props) => {
     console.log(values)
   }
 
+  const onClaimSubmit = async () => {
+    if (!props.userPendingRewards) {
+      return;
+    }
+    const amount = parseInt(props.userPendingRewards);
+    if (amount <= 0) {
+      toast({
+        description: "nothing can be claimed"
+      })
+      return;
+    }
+    try {
+      setLoading(true);
+      const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
+      await contract.claim(props.poolId);
+      props.refreshFormData();
+      props.setOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast({
+        description: "Failed to claim"
+      })
+    } finally {
+      setLoading(false);
+    }
+
+  }
+
   return <Dialog open={props.open} onOpenChange={(open) => {
     if (loading) {
       return;
@@ -161,7 +189,7 @@ export const ClaimDialog = (props: Props) => {
           <div className="flex flex-row justify-center items-center mb-10 mt-9">
             <Label className="text-lg">{props.userPendingRewards ? `Pending rewards: ${ethers.formatEther(props.userPendingRewards)} ${props.userRewardsSymbol}` : `Pending rewards: - ${props.userRewardsSymbol}`}</Label>
           </div>
-          <Button type="submit" size="lg" className="w-full">Claim</Button>
+          <Button type="submit" size="lg" onClick={onClaimSubmit} className="w-full">Claim</Button>
         </TabsContent>
         <TabsContent value="withdraw">
           <Form {...withdrawFrom}>

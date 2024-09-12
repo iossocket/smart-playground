@@ -110,8 +110,26 @@ export const ClaimDialog = (props: Props) => {
     }
   }
 
-  const onWithdrawSubmit = (values: z.infer<typeof withdrawFormSchema>) => {
-    console.log(values)
+  const onWithdrawSubmit = async (values: z.infer<typeof withdrawFormSchema>) => {
+    try {
+      setLoading(true);
+      const amount = ethers.parseUnits(values.withdraw, 18);
+
+      const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
+      await contract.withdraw(props.poolId, amount);
+      toast({
+        description: "Withdraw successfully"
+      })
+      props.refreshFormData();
+      props.setOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast({
+        description: "Failed to withdraw"
+      })
+    } finally {
+      setLoading(false);
+    }
   }
 
   const onClaimSubmit = async () => {

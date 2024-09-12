@@ -220,6 +220,7 @@ export default function FarmingForm(props: Props) {
       userStaked={userStaked}
       userPendingRewards={userPendingRewards}
       userRewardsSymbol={props.earnedSymbol}
+      refreshFormData={refreshFormData}
     />}
     {loading && <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-10">
       <LoadingSpinner />

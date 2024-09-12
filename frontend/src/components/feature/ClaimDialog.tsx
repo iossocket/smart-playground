@@ -13,6 +13,8 @@ import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { LoadingSpinner } from "../ui/spinner";
+import { useToast } from "../hooks/use-toast";
 
 interface Props {
   open: boolean;
@@ -26,6 +28,8 @@ interface Props {
   userRewardsSymbol: string;
   poolTitle: string;
   poolId: number;
+
+  refreshFormData: () => void;
 }
 
 const bigintSchema = z.string().refine((val) => {
@@ -43,6 +47,7 @@ export const ClaimDialog = (props: Props) => {
 
   const { signer } = useWalletStore();
   const [loading, setLoading] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const stakeFormSchema = z.object({
     userBalance: bigintSchema.refine((val) => {
@@ -82,6 +87,7 @@ export const ClaimDialog = (props: Props) => {
 
   const onStakeSubmit = async (values: z.infer<typeof stakeFormSchema>) => {
     try {
+      setLoading(true);
       const amount = ethers.parseUnits(values.userBalance, 18);
 
       const lpContract = new Contract(addresses["FarmingC2NModule#lpToken01"], depositTokens[addresses["FarmingC2NModule#lpToken01"]].abi, signer);
@@ -89,8 +95,18 @@ export const ClaimDialog = (props: Props) => {
 
       const contract = new Contract(addresses["FarmingC2NModule#FarmingC2N"], farmContract.abi, signer);
       await contract.deposit(props.poolId, amount);
+      toast({
+        description: "Stake successfully"
+      })
+      props.refreshFormData();
+      props.setOpen(false);
     } catch (e) {
       console.error(e);
+      toast({
+        description: "Failed to stake"
+      })
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -99,7 +115,9 @@ export const ClaimDialog = (props: Props) => {
   }
 
   return <Dialog open={props.open} onOpenChange={(open) => {
-    console.log("dialog", open);
+    if (loading) {
+      return;
+    }
     props.setOpen(open);
   }} modal={true}>
     <DialogContent>
@@ -170,6 +188,9 @@ export const ClaimDialog = (props: Props) => {
           </Form>
         </TabsContent>
       </Tabs>
+      {loading && <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-10">
+        <LoadingSpinner />
+      </div>}
     </DialogContent>
   </Dialog >
 }

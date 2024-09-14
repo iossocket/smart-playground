@@ -7,7 +7,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Contract, ethers } from "ethers";
 import { useWalletStore } from "@/zustand/store";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { addresses, depositTokens, farmContract } from "@/config/farms";
 import z from "zod";
 import { useForm } from "react-hook-form";
@@ -34,7 +34,7 @@ interface Props {
 
 const bigintSchema = z.string().refine((val) => {
   try {
-    BigInt(val);
+    ethers.parseUnits(val, 18);
     return true;
   } catch (e) {
     return false;
@@ -55,7 +55,7 @@ export const ClaimDialog = (props: Props) => {
         if (!props.userBalance) {
           return true;
         }
-        return ethers.parseEther(props.userBalance || "0") >= ethers.parseUnits(`${BigInt(val)}`, 18);
+        return ethers.parseEther(props.userBalance || "0") >= ethers.parseUnits(val, 18);
       } catch (error) {
         return false;
       }
@@ -70,7 +70,7 @@ export const ClaimDialog = (props: Props) => {
         if (!props.userStaked) {
           return true;
         }
-        return ethers.parseEther(props.userStaked) >= ethers.parseUnits(`${BigInt(val)}`, 18);
+        return ethers.parseEther(props.userStaked) >= ethers.parseUnits(val, 18);
       } catch (error) {
         return false;
       }
@@ -85,6 +85,29 @@ export const ClaimDialog = (props: Props) => {
       userBalance: ""
     }
   });
+
+  const canWithdraw = useMemo(() => {
+    try {
+      if (!props.userStaked) {
+        return false;
+      }
+      return ethers.parseUnits(props.userStaked, 18) > 0;
+    } catch (error) {
+      return false;
+    }
+  }, [props.userStaked])
+
+  const canStake = useMemo(() => {
+    try {
+      if (!props.userBalance) {
+        return false;
+      }
+      return ethers.parseUnits(props.userBalance, 18) > 0;
+    } catch (error) {
+      return false;
+    }
+  }, [props.userBalance])
+
 
   const withdrawFrom = useForm<z.infer<typeof withdrawFormSchema>>({
     resolver: zodResolver(withdrawFormSchema),
@@ -195,18 +218,18 @@ export const ClaimDialog = (props: Props) => {
                   return <FormItem>
                     <div className="flex flex-row justify-between items-center mb-2">
                       <FormLabel>{props.userBalance ? `Balance: ${ethers.formatEther(props.userBalance)} ${props.userBalanceSymbol}` : `Balance: - ${props.userBalanceSymbol}`}</FormLabel>
-                      <Button type="button" onClick={() => {
+                      <Button disabled={!canStake} type="button" onClick={() => {
                         stakeFrom.setValue("userBalance", ethers.formatEther(props.userBalance || 0), { shouldValidate: true });
                       }} variant="ghost">MAX</Button>
                     </div>
                     <FormControl>
-                      <Input placeholder="user balance" className="mb-4" {...field} />
+                      <Input disabled={!canStake} placeholder="user balance" className="mb-4" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 }}
               />
-              <Button type="submit" size="lg" className="w-full mt-4">Stake</Button>
+              <Button disabled={!canStake} type="submit" size="lg" className="w-full mt-4">Stake</Button>
             </form>
           </Form>
         </TabsContent>
@@ -226,17 +249,18 @@ export const ClaimDialog = (props: Props) => {
                   return <FormItem>
                     <div className="flex flex-row justify-between items-center mb-2">
                       <Label>{props.userStaked ? `Deposited: ${ethers.formatEther(props.userStaked)} ${props.userBalanceSymbol}` : `Deposited: - ${props.userBalanceSymbol}`}</Label>
-                      <Button onClick={() => {
+                      <Button disabled={!canWithdraw} type="button" onClick={() => {
+                        withdrawFrom.setValue("withdraw", ethers.formatEther(props.userStaked || 0), { shouldValidate: true });
                       }} variant="ghost">MAX</Button>
                     </div>
                     <FormControl>
-                      <Input placeholder="user balance" className="mb-4" {...field} />
+                      <Input disabled={!canWithdraw} placeholder="withdraw" className="mb-4" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 }}
               />
-              <Button type="submit" size="lg" className="w-full mt-4">Withdraw</Button>
+              <Button disabled={!canWithdraw} type="submit" size="lg" className="w-full mt-4">Withdraw</Button>
             </form>
           </Form>
         </TabsContent>

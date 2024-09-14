@@ -51,10 +51,14 @@ export const ClaimDialog = (props: Props) => {
 
   const stakeFormSchema = z.object({
     userBalance: bigintSchema.refine((val) => {
-      if (!props.userBalance) {
-        return true;
+      try {
+        if (!props.userBalance) {
+          return true;
+        }
+        return ethers.parseEther(props.userBalance || "0") >= ethers.parseUnits(`${BigInt(val)}`, 18);
+      } catch (error) {
+        return false;
       }
-      return ethers.parseEther(props.userBalance) >= ethers.parseUnits(`${BigInt(val)}`, 18);
     }, {
       message: "not enough to stake",
     })
@@ -62,10 +66,14 @@ export const ClaimDialog = (props: Props) => {
 
   const withdrawFormSchema = z.object({
     withdraw: bigintSchema.refine((val) => {
-      if (!props.userStaked) {
-        return true;
+      try {
+        if (!props.userStaked) {
+          return true;
+        }
+        return ethers.parseEther(props.userStaked) >= ethers.parseUnits(`${BigInt(val)}`, 18);
+      } catch (error) {
+        return false;
       }
-      return ethers.parseEther(props.userStaked) >= ethers.parseUnits(`${BigInt(val)}`, 18);
     }, {
       message: "not enough to withdraw",
     })
@@ -187,9 +195,8 @@ export const ClaimDialog = (props: Props) => {
                   return <FormItem>
                     <div className="flex flex-row justify-between items-center mb-2">
                       <FormLabel>{props.userBalance ? `Balance: ${ethers.formatEther(props.userBalance)} ${props.userBalanceSymbol}` : `Balance: - ${props.userBalanceSymbol}`}</FormLabel>
-                      <Button onClick={() => {
-                        // TODO
-                        stakeFrom.setValue("userBalance", "123");
+                      <Button type="button" onClick={() => {
+                        stakeFrom.setValue("userBalance", ethers.formatEther(props.userBalance || 0), { shouldValidate: true });
                       }} variant="ghost">MAX</Button>
                     </div>
                     <FormControl>
